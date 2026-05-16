@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pflegebericht aufnehmen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab:hover {
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border 0.2s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-upload-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .file-upload-btn:hover {
+            background: #efefef;
+            border-color: #667eea;
+        }
+        
+        .file-upload-btn.has-file {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .voice-record {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: #f44336;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+        }
+        
+        .record-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(244, 67, 54, 0.4);
+        }
+        
+        .record-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #ff1744;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .record-status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .record-status.recording {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .record-timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .recordings-list {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .recordings-list.active {
+            display: block;
+        }
+        
+        .recordings-list h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .recording-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .recording-item audio {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .recording-item button {
+            padding: 5px 10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .recording-item button:hover {
+            background: #d32f2f;
+        }
+        
+        .combine-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .combine-btn:hover {
+            background: #45a049;
+        }
+        
+        .final-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .final-preview.active {
+            display: block;
+        }
+        
+        .final-preview audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .delete-all {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .delete-all:hover {
+            background: #d32f2f;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .required {
+            color: #d32f2f;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Pflegebericht aufnehmen</h1>
+        <p class="subtitle">Wählen Sie eine Methode zur Audio-Aufnahme</p>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('record')">🎤 Aufnehmen</button>
+            <button class="tab" onclick="switchTab('upload')">📁 Datei hochladen</button>
+        </div>
+        
+        <form id="pflegeForm">
+            <!-- Voice Recording Tab -->
+            <div class="tab-content active" id="recordTab">
+                <div class="info-box">
+                    💡 <strong>Tipp:</strong> Nehmen Sie mehrere Teile auf und fügen Sie sie zusammen! Sprechen → Stopp → Sprechen → Stopp → Zusammenfügen.
+                </div>
+                
+                <div class="voice-record">
+                    <button type="button" class="record-btn" id="recordBtn" onclick="toggleRecording()">
+                        🎤
+                    </button>
+                    <div class="record-timer" id="timer">00:00</div>
+                    <div class="record-status" id="status">Bereit zur Aufnahme</div>
+                </div>
+                
+                <div class="recordings-list" id="recordingsList">
+                    <h4>📝 Aufnahmen (<span id="recordingCount">0</span>)</h4>
+                    <div id="recordingsContainer"></div>
+                    <button type="button" class="combine-btn" onclick="combineRecordings()">
+                        ➕ Alle Aufnahmen zusammenfügen
+                    </button>
+                </div>
+                
+                <div class="final-preview" id="finalPreview">
+                    <strong>✅ Finale zusammengefügte Aufnahme</strong>
+                    <audio id="finalAudio" controls></audio>
+                    <button type="button" class="delete-all" onclick="deleteAllRecordings()">
+                        🗑️ Alles löschen & neu starten
+                    </button>
+                </div>
+            </div>
+            
+            <!-- File Upload Tab -->
+            <div class="tab-content" id="uploadTab">
+                <div class="info-box">
+                    💡 <strong>Tipp:</strong> Wählen Sie eine bereits vorhandene Audio-Datei (MP3, WAV, M4A).
+                </div>
+                
+                <div class="form-group">
+                    <label>Audio-Datei</label>
+                    <div class="file-upload">
+                        <input type="file" id="audioFile" accept="audio/*">
+                        <label for="audioFile" class="file-upload-btn" id="fileLabel">
+                            📁 Audio-Datei auswählen
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Patient Data (always visible) -->
+            <div class="form-group">
+                <label>Patientenname <span class="required">*</span></label>
+                <input type="text" id="patientenname" required placeholder="z.B. Max Mustermann">
+            </div>
+            
+            <div class="form-group">
+                <label>Datum <span class="required">*</span></label>
+                <input type="date" id="datum" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Pflegekraft <span class="required">*</span></label>
+                <input type="text" id="pflegekraft" required placeholder="Ihr Name">
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                📋 Pflegebericht erstellen
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Bericht wird erstellt...</p>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                Audio wird transkribiert und analysiert (~10-20 Sekunden)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ WICHTIG: Ersetze diese URL mit deiner n8n Webhook-URL!
+        const WEBHOOK_URL = 'https://rinking.app.n8n.cloud/webhook/pflegedoku';
+        
+        // State
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlobs = []; // Array für mehrere Aufnahmen
+        let combinedBlob = null;
+        let isRecording = false;
+        let timerInterval;
+        let seconds = 0;
+        let activeTab = 'record';
+        
+        // Set today's date as default
+        document.getElementById('datum').valueAsDate = new Date();
+        
+        // Tab switching
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (tab === 'record') {
+                document.getElementById('recordTab').classList.add('active');
+            } else {
+                document.getElementById('uploadTab').classList.add('active');
+            }
+        }
+        
+        // Voice Recording
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    recordedBlobs.push(blob); // Zur Liste hinzufügen!
+                    updateRecordingsList();
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // Update UI
+                document.getElementById('recordBtn').classList.add('recording');
+                document.getElementById('recordBtn').textContent = '⏸️';
+                document.getElementById('status').textContent = '🔴 Aufnahme läuft...';
+                document.getElementById('status').classList.add('recording');
+                
+                // Start timer
+                seconds = 0;
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+                
+            } catch (err) {
+                console.error('Mikrofon-Zugriff fehlgeschlagen:', err);
+                showError('❌ Mikrofon-Zugriff verweigert. Bitte erlauben Sie den Zugriff in Ihren Browser-Einstellungen.');
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                
+                // Update UI
+                document.getElementById('recordBtn').classList.remove('recording');
+                document.getElementById('recordBtn').textContent = '🎤';
+                document.getElementById('status').textContent = `✅ ${recordedBlobs.length} Aufnahme(n) gespeichert - Klicken für weitere`;
+                document.getElementById('status').classList.remove('recording');
+                
+                // Stop timer
+                clearInterval(timerInterval);
+            }
+        }
+        
+        function updateRecordingsList() {
+            const container = document.getElementById('recordingsContainer');
+            const list = document.getElementById('recordingsList');
+            const count = document.getElementById('recordingCount');
+            
+            count.textContent = recordedBlobs.length;
+            list.classList.add('active');
+            
+            container.innerHTML = '';
+            
+            recordedBlobs.forEach((blob, index) => {
+                const item = document.createElement('div');
+                item.className = 'recording-item';
+                
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = URL.createObjectURL(blob);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.onclick = () => deleteRecording(index);
+                
+                item.appendChild(document.createTextNode(`#${index + 1} `));
+                item.appendChild(audio);
+                item.appendChild(deleteBtn);
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function deleteRecording(index) {
+            recordedBlobs.splice(index, 1);
+            updateRecordingsList();
+            
+            if (recordedBlobs.length === 0) {
+                document.getElementById('recordingsList').classList.remove('active');
+                document.getElementById('status').textContent = 'Bereit zur Aufnahme';
+            } else {
+                document.getElementById('status').textContent = `✅ ${recordedBlobs.length} Aufnahme(n) gespeichert`;
+            }
+        }
+        
+        async function combineRecordings() {
+            if (recordedBlobs.length === 0) {
+                showError('❌ Keine Aufnahmen zum Zusammenfügen!');
+                return;
+            }
+            
+            // Für Browser-Kompatibilität: Blobs direkt zusammenfügen
+            combinedBlob = new Blob(recordedBlobs, { type: 'audio/webm' });
+            
+            const finalAudio = document.getElementById('finalAudio');
+            finalAudio.src = URL.createObjectURL(combinedBlob);
+            
+            document.getElementById('finalPreview').classList.add('active');
+            document.getElementById('status').textContent = '✅ Aufnahmen zusammengefügt! Bereit zum Senden.';
+        }
+        
+        function deleteAllRecordings() {
+            recordedBlobs = [];
+            combinedBlob = null;
+            document.getElementById('recordingsList').classList.remove('active');
+            document.getElementById('finalPreview').classList.remove('active');
+            document.getElementById('status').textContent = 'Bereit zur Aufnahme';
+            seconds = 0;
+            updateTimer();
+        }
+        
+        function updateTimer() {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('timer').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        // File upload handling
+        const fileInput = document.getElementById('audioFile');
+        const fileLabel = document.getElementById('fileLabel');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                fileLabel.textContent = '✅ ' + this.files[0].name;
+                fileLabel.classList.add('has-file');
+            } else {
+                fileLabel.textContent = '📁 Audio-Datei auswählen';
+                fileLabel.classList.remove('has-file');
+            }
+        });
+        
+        // Form submission
+        document.getElementById('pflegeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const error = document.getElementById('error');
+            const form = document.getElementById('pflegeForm');
+            const loading = document.getElementById('loading');
+            
+            // Hide error
+            error.classList.remove('active');
+            
+            // Get form data
+            const patientenname = document.getElementById('patientenname').value;
+            const datum = document.getElementById('datum').value;
+            const pflegekraft = document.getElementById('pflegekraft').value;
+            
+            // Get audio (from recording or file)
+            let audioFile;
+            if (activeTab === 'record') {
+                if (!combinedBlob && recordedBlobs.length === 0) {
+                    showError('❌ Bitte nehmen Sie zuerst eine Audio-Aufnahme auf!');
+                    return;
+                }
+                
+                // Wenn nicht zusammengefügt, automatisch zusammenfügen
+                if (!combinedBlob && recordedBlobs.length > 0) {
+                    await combineRecordings();
+                }
+                
+                audioFile = new File([combinedBlob], 'aufnahme.webm', { type: 'audio/webm' });
+            } else {
+                audioFile = fileInput.files[0];
+                if (!audioFile) {
+                    showError('❌ Bitte wählen Sie eine Audio-Datei aus!');
+                    return;
+                }
+            }
+            
+            // Show loading
+            form.style.display = 'none';
+            loading.classList.add('active');
+            
+            try {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('Audio', audioFile);
+                formData.append('Patientenname', patientenname);
+                formData.append('Datum', datum);
+                formData.append('Pflegekraft', pflegekraft);
+                
+                // Send to n8n
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                // Get HTML response
+                const html = await response.text();
+                
+                // Open in new window
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(html);
+                    newWindow.document.close();
+                    
+                    // Reset form
+                    form.reset();
+                    fileLabel.textContent = '📁 Audio-Datei auswählen';
+                    fileLabel.classList.remove('has-file');
+                    deleteAllRecordings();
+                    form.style.display = 'block';
+                    loading.classList.remove('active');
+                    
+                    // Success message
+                    alert('✅ Pflegebericht erfolgreich erstellt und geöffnet!');
+                } else {
+                    throw new Error('Pop-up wurde blockiert. Bitte erlauben Sie Pop-ups für diese Seite.');
+                }
+                
+            } catch (err) {
+                console.error('Error:', err);
+                showError('❌ Fehler: ' + err.message);
+                form.style.display = 'block';
+                loading.classList.remove('active');
+            }
+        });
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('active');
+        }
+    </script>
+</body>
+</html>
